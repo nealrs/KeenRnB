@@ -1,0 +1,263 @@
+<html>
+<head>
+<title>Keen R&B</title>
+	<link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'>
+	<style>
+		body {
+			color:#111111;
+			font-family: 'Varela Round', sans-serif;
+		}
+		.help{
+			text-align:right;
+			font-size:80%;
+		}
+		
+		h2{
+			margin-top:5px;
+			margin-bottom:5px;
+		}
+		.req {
+			color:#FF4136;
+		}
+		.warn {
+			color:#FF851B;
+		}
+		#form {
+			display: inline-block;
+			width:100%;
+		}
+		#form input {
+			border: none;
+  		background: transparent;
+  		border-bottom: 1px solid #111111;
+  		max-width:100%;
+  		outline: none;
+		}
+		#form textarea {
+			border: none;
+  		background: #EFEFEF;
+  		border-radius:4px;
+  		padding:5px;
+		}
+		
+		::-webkit-input-placeholder {
+   		color: #111111;
+		}
+
+		:-moz-placeholder { /* Firefox 18- */
+			 color: #111111;  
+		}
+
+		::-moz-placeholder {  /* Firefox 19+ */
+			 color: #111111;  
+		}
+
+		:-ms-input-placeholder {  
+			 color: #111111;  
+		}
+		
+		#container {
+			margin:auto;
+			text-align:left;
+			width:550px;
+			padding:10px;
+		}
+		
+		#output {
+			margin-top:30px;
+			width:100%;
+			word-wrap:break-word;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			overflow:hidden;
+		}
+		
+		a {
+			text-decoration: none; border-bottom:1px dotted;
+			color:#0074D9;
+		}
+		
+		.button {
+			text-decoration: none;
+			color:#FFF; 
+			
+			border-bottom:none;
+			
+			white-space: nowrap;
+			border-radius: 5px;
+			
+			-webkit-transition: all 0.2s ease-in-out;
+			-ms-transition: all 0.2s ease-in-out;
+			-moz-transition: all 0.2s ease-in-out;
+			-o-transition: all 0.2s ease-in-out;
+			transition: all 0.2s ease-in-out;
+			
+			text-align:center;
+			background:#00afd7;
+			padding:10px 30px;
+			-webkit-font-smoothing: antialiased;
+		}
+		
+		.button:hover {
+			-webkit-filter: brightness(1.1);
+    	color: #FFF;
+		}
+		
+	</style>
+	<script src="localforage.min.js"></script>
+	<script>
+		window.onload = function () {
+		
+      localforage.getItem('p', function(p) {
+      	document.getElementById("p").value=p; 
+      });
+			
+			localforage.getItem('k', function(k) {
+				document.getElementById("k").value=k; 
+			});
+      
+		}
+		
+		function save(p,k){
+	  	localforage.setItem('p', p, function(){console.log(p)});	
+	  	localforage.setItem('k', k, function(){console.log(k)});
+		}
+	
+		function shorten(u){
+			s = new XMLHttpRequest();
+
+			s.open("POST", "https://www.googleapis.com/urlshortener/v1/url", true);
+			s.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+
+			r = new Object();
+			r.longUrl = u;
+
+			j = JSON.stringify(r);
+
+			s.send(j);
+
+			//console.log(s);
+			//console.log(s.responseText);
+			
+			a = s.responseText;
+			console.log(a);
+			b = JSON.parse(a);
+			console.log(b)
+			
+			//sh = JSON.parse((s.responseText));
+
+			//url =  sh.id;
+			
+			//console.log(url);
+			
+			return "xxxx";
+		}
+	
+		function payload(d){
+			d = d.replace(/^[,\s]+|[,\s]+$/g, '');
+			d = d.replace(/\s*,\s*/g, ',');
+			
+			try {
+  			o = JSON.parse('{'+d+'}');
+			} catch(err) { alert("there is an error in the data field"); }
+			
+			e = {
+				"keen" : {
+					"addons" : [
+						{
+								"name" : "keen:ua_parser",
+								"input" : {
+										"ua_string" : "user_agent"
+								},
+								"output" : "parsed_user_agent"
+						},
+						{
+								"name" : "keen:ip_to_geo",
+								"input" : {
+										"ip" : "ip_address"
+								},
+								"output" : "ip_geo_info"
+						}
+					]
+				},
+				"ip_address" : "${keen.ip}",
+				"user_agent" : "${keen.user_agent}"
+			};			
+			
+			for (var key in o) {
+  			if (o.hasOwnProperty(key)) {
+  				e[key] = o[key];
+  			}
+			}
+				
+			e = window.btoa(JSON.stringify(e));
+			return e;
+		}
+	
+		function process(){
+			p = document.getElementById("p").value;
+			k = document.getElementById("k").value;
+			c = document.getElementById("c").value;
+			
+			if (!p || !k || (!c && !document.getElementById('t').checked)){
+				alert("project id, api write key, or collection missing");
+				location.reload();
+			} else { save(p,k); }
+
+			if (!c || document.getElementById('t').checked){
+				c="TEST";
+			}
+			
+			d = document.getElementById("d").value;
+			e = payload(d);
+			console.log(e);
+			
+			r = encodeURIComponent(document.getElementById("r").value)
+
+			bu = "https://api.keen.io/3.0/projects/"+p+"/events/"+c+"?api_key="+k+"&data="+e;
+			//bus = shorten(bu);
+			//bus = "---";
+			
+			if (!r){
+				ru = "no redirect URL provided";
+				document.getElementById("output").innerHTML = "redirect: <span class='warn'>redirect URL not defined</span><br><br>beacon: <a href='"+bu+"'>"+bu+"</a>";
+			} else {
+					ru = "https://api.keen.io/3.0/projects/"+p+"/events/"+c+"?api_key="+k+"&data="+e+"&redirect="+r;
+					//rus = shorten(ru);
+					//rus = "---";
+					//document.getElementById("output").innerHTML = "redirect: <a href='"+ru+"'>"+ru+"</a><br>&#10095;&nbsp;shortened: <a href='"+rus+"'>"+rus+"</a><br><br>beacon: <a href='"+bu+"'>"+bu+"</a><br>&#10095;&nbsp;shortened: <a href='"+bus+"'>"+bus;
+					document.getElementById("output").innerHTML = "redirect: <a href='"+ru+"'>"+ru+"</a><br><br>beacon: <a href='"+bu+"'>"+bu+"</a>";
+
+				}
+
+		}
+		
+	</script>
+</head>
+
+<body>
+	<div id = "container">
+		<h2><img src="keenio.png" style="max-height:50px ;vertical-align:middle"> Redirect & Beacon Builder</h2>
+		<p class="help">by <a href="http://nealshyam.com">Neal Shyam</a>&nbsp;&bull;&nbsp;<a href="https://keen.io/docs/data-collection/redirect/">Keen API Docs</a></p>
+		<div id="form">
+
+			Project ID: <input id = "p" type="text" name="p" required size="35"><span class="req">*</span><br><br>
+		
+			API write key: <input id = "k" type="text" name="k" required size="75"><span class="req">*</span><br><br>
+
+			Collection name: <input id = "c" type="text" required size="30"><span class="req">*</span> &nbsp; <span class="warn">Test mode: <input id = "t" type="checkbox" name="t" checked></span><br><br>
+
+			Data to encode, (geo-ip & user agent addons included automatically):<br><textarea id = "d" rows="4" cols="70" name = "d" placeholder='"key1" : "data1", "key2" : "data2", etc.'></textarea><br><br>
+
+			Redirect URL: <input id = "r" type="url" name = "r" placeholder = "redirect url -- will be URL encoded" size="78"><br><br>
+		
+			<a href="#" id = "run" class="button" onclick="process()">Create links</a>
+
+		</div>
+	
+		<div id = "output"></div>
+
+	</div>
+	
+</body>
+</html>
