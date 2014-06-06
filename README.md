@@ -1,11 +1,13 @@
 Keen R&B
 =======
 
-**[Live Demo](http://nealshyam.com/krb)**
-
 *A tool for building Keen.io redirect &amp; beacon URLs*
 
-Detailed explanation to come -- give R&B:
+**[Live Demo](http://nealshyam.com/krb)**
+
+![Keen R&B screenshot](/ss.png)
+
+**Detailed explanation to come -- give R&B your:**
 
 - Project ID [persisted for your convenience]
 - API write key [also persisted]
